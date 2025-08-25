@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar-bg: #fcfaf8;
+  --icon-color: #DC4C3E;
+  --tab-active: #fce0dd;
+}
+
+/* Kale Theme */
+[data-theme="kale"] {
+  --sidebar-bg: #E6F0EC;
+  --icon-color: #3A5A40;
+  --tab-active: #e2ffe5; /* lighter pale green */
+} 
+
+/* Lavender Theme */
+[data-theme="lavender"] {
+  --sidebar-bg: #F3E8F9;
+  --icon-color: #734b94;
+  --tab-active: #f3e3fd; /* lighter pastel lavender */
+}
+
+/* Blueberry Theme */
+[data-theme="blueberry"] {
+  --sidebar-bg: #E8ECFB;
+  --icon-color: #4A5FC1;
+  --tab-active: #dde3f7; /* lighter pastel blue */
+}
+
+/* Raspberry Theme */
+[data-theme="raspberry"] {
+  --sidebar-bg: #FCE8F0;
+  --icon-color: #C7365F;
+  --tab-active: #f9dfe6; /* lighter pastel pink */
+}
+/* Width of the entire scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 12px;
+}
+
+/* Scrollbar track (background) */
+::-webkit-scrollbar-track {
+  background-color: var(--sidebar-bg);
+  border-radius: 10px;
+}
+
+/* Scrollbar thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background-color: var(--icon-color);
+  border-radius: 10px;
+  border: 3px solid var(--sidebar-bg);
+}
+
+/* Scrollbar thumb on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--sidebar-bg); /* darker shade on hover */
+}
+
+/* Scrollbar corner (bottom-right) */
+::-webkit-scrollbar-corner {
+  background: var(--sidebar-bg);
+}
