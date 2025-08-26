@@ -6,6 +6,11 @@
   --tab-active: #fce0dd;
 }
 
+[data-theme="orange"] {
+  --sidebar-bg: #fcfaf8;
+  --icon-color: #DC4C3E;
+  --tab-active: #fce0dd;
+} 
 /* Kale Theme */
 [data-theme="kale"] {
   --sidebar-bg: #E6F0EC;

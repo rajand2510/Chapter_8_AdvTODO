@@ -26,7 +26,7 @@ const Hero = () => {
         </div>
 
         {/* Button */}
-        <Link to={'./auth/login'}
+        <Link to={'./login'}
           className="bg-[#DC2626] hover:bg-[#cd0c0c] 
             py-1.5 px-4 sm:py-2 sm:px-6 
             text-sm sm:text-base 
@@ -51,7 +51,7 @@ const Hero = () => {
           The smart way to manage tasks and to-dos.
         </p>
 
-          <Link to={'./auth/login'}
+          <Link to={'./login'}
           className="bg-[#DC2626] hover:bg-[#cd0c0c] 
             lg:px-8 lg:py-3 py-2 px-6 sm:py-2 sm:px-6 
             text-sm font-semibold rounded-lg text-white mt-5"
@@ -59,7 +59,7 @@ const Hero = () => {
           Start For Free
         </Link>
 
-        <div className="relative p-4 h-[80vh] mt-8 mx-auto max-w-4xl w-full shadow-2xl rounded-lg">
+        <div className="relative p-4 h-[80vh] mt-8 mx-auto max-w-6xl w-full shadow-2xl rounded-lg">
           <div className="bg-gray-200 flex text-center justify-center h-full items-center text-5xl rounded-lg">
           <img className="h-full" src={demoImage} alt="" />
           </div>

@@ -19,7 +19,7 @@ import { TaskActions } from "./TaskActions";
 import EditableTask from "./EditableTask";
 import AddTaskModal from "./AddTaskModal";
 
-const TodayTask = () => {
+const UpcomingTask = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [task, setTask] = useState("Take kids to the park after work tom");
     const [showAddModal, setShowAddModal] = useState(false);
@@ -60,11 +60,6 @@ const TodayTask = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-
-
-  // Selectors
-
-
     // Format date/time nicely
     const formatDateTime = (iso) => {
         if (!iso) return "";
@@ -89,7 +84,7 @@ const TodayTask = () => {
 
             <div className="flex flex-col max-w-4xl mx-auto w-full">
                 <div className="flex justify-between items-center">
-                    <h3 className="text-3xl font-bold">Today</h3>
+                    <h3 className="text-3xl font-bold">Upcoming</h3>
                     <button
                         onClick={() => setShowAddModal(true)}
                         className="p-2 px-3 rounded-lg gap-2 flex hover:bg-black/5 items-center cursor-pointer"
@@ -103,70 +98,7 @@ const TodayTask = () => {
                     </button>
 
                 </div>
-                <div className="mt-4  rounded">
-                    {/* Header with toggle arrow */}
-                    <div
-                        className="flex items-center gap-2 cursor-pointer py-2 border-b border-gray-200"
-                        onClick={() => setIsOpen(!isOpen)}
-                    >
-                        <h3 className="text-sm font-bold">Overdue</h3>
-                        {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    </div>
-
-                    {/* Collapsible content */}
-                    {isOpen && (
-                        <div className="flex flex-col w-full gap-2 p-3 border-b border-gray-200 group relative">
-                            <div className="flex items-start justify-between">
-                                {isEditing ? (
-                                    <EditableTask
-                                        task={task}
-                                        setTask={setTask}
-                                        dateTime={dateTime}
-                                        setDateTime={setDateTime}
-                                        priority={priority}
-                                        setPriority={setPriority}
-                                        reminder={reminder}
-                                        setReminder={setReminder}
-                                        group={group}
-                                        setGroup={setGroup}
-                                        priorityOptions={priorityOptions}
-                                        groupOptions={groupOptions}
-                                        isEditing={isEditing}
-                                        setIsEditing={setIsEditing}
-                                    />
-                                ) : (
-                                    <>
-                                        <p className="text-sm break-words pr-6">{task}</p>
-                                        <TaskActions
-                                            onEdit={() => setIsEditing(true)}
-                                            onReminder={() => setReminder(true)}
-                                            onDelete={() => console.log("Delete task")}
-                                        />
-                                    </>
-                                )}
-                            </div>
-
-                            {!isEditing && (
-                                <div className="flex flex-row justify-between items-center text-xs mt-2">
-                                    <div className="flex items-center gap-3 text-gray-600">
-                                        {dateTime && <span>📅 {formatDateTime(dateTime)}</span>}
-                                        {priority && (
-                                            <span
-                                                className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${priority.color}`}
-                                            >
-                                                {priority.label}
-                                            </span>
-                                        )}
-                                        {reminder && <span>⏰ Reminder</span>}
-                                    </div>
-                                    <h4>
-                                        {group ? group.label : "Home"} <span className="text-gray-500">#</span>
-                                    </h4>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+               
 
                 {/* TASK LIST SECTION */}
                 <div className="mt-4">
@@ -265,4 +197,4 @@ const TodayTask = () => {
     );
 };
 
-export default TodayTask;
+export default UpcomingTask;
