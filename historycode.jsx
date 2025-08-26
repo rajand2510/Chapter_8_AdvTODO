@@ -4,8 +4,9 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
 const API_BASE = "http://localhost:5000/api";
-const VAPID_PUBLIC_KEY =
-  "BAdG3eDzTUy9Lb2Mvpsoxsr00c7hS5Uk5q64Bc4uVk-mvN3c95XvlDc8uE9KVnQVl2-coP4Y0DpJRJ9bs3qSLKg";
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
+console.log(VAPID_PUBLIC_KEY);
 
 function App() {
   const [user, setUser] = useState(null);
