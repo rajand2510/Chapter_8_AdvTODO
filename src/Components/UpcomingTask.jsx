@@ -1,40 +1,34 @@
 import {
-    AlarmClock,
-    Calendar,
-    CheckCircle,
     Circle,
     ListFilter,
-    MoreHorizontal,
-    X,
-    Flag,
-    Bell,
-    Clock,
-    ChevronDown,
-    ChevronRight,
     Plus,
-    Check
+    Check,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { TaskActions } from "./TaskActions";
 import EditableTask from "./EditableTask";
 import AddTaskModal from "./AddTaskModal";
-
+import { useDispatch, useSelector } from "react-redux";
+import { selectUpcomingTasks } from "../features/todoSlice";
+import { removeTaskOptimistic } from "../features/todoSlice";
+import { showUndoToast } from "../utils/showUndoToast";
 const UpcomingTask = () => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [task, setTask] = useState("Take kids to the park after work tom");
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingTaskId, setEditingTaskId] = useState(null);
 
-    // Meta states
-    const [dateTime, setDateTime] = useState(null);
-    const [priority, setPriority] = useState(null);
-    const [reminder, setReminder] = useState(false);
-    const [group, setGroup] = useState(null); // new group state
-    const [isOpen, setIsOpen] = useState(true); // New state for toggle
-    const [priorityOpen, setPriorityOpen] = useState(false);
-    const [groupOpen, setGroupOpen] = useState(false);
-    const priorityRef = useRef(null);
-    const groupRef = useRef(null);
-    const [isCompleted, setIsCompleted] = useState(false);
+    const upcomingTask = useSelector(selectUpcomingTasks);
+    const dispatch = useDispatch();
+    const token = useSelector(state => state.todo.token);
+
+// In your component, when marking complete:
+const handleComplete = (task) => {
+  const taskWithIds = { ...task, groupId: task.groupId, subGroupId: task.subGroupId };
+  dispatch(removeTaskOptimistic({ taskId: task._id, taskData: taskWithIds }));
+  showUndoToast(taskWithIds, dispatch, token);
+};
+
+
+
     const priorityOptions = [
         { value: "high", label: "High", color: "bg-red-100 text-red-700" },
         { value: "medium", label: "Medium", color: "bg-yellow-100 text-yellow-700" },
@@ -47,20 +41,17 @@ const UpcomingTask = () => {
         { value: "personal", label: "Personal" },
     ];
 
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (priorityRef.current && !priorityRef.current.contains(e.target)) {
-                setPriorityOpen(false);
-            }
-            if (groupRef.current && !groupRef.current.contains(e.target)) {
-                setGroupOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    // Format date like "22 Aug 2025 • Friday"
+    const formatDateHeader = (iso) => {
+        const d = new Date(iso);
+        return d.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            weekday: "long",
+        });
+    };
 
-    // Format date/time nicely
     const formatDateTime = (iso) => {
         if (!iso) return "";
         const d = new Date(iso);
@@ -71,6 +62,14 @@ const UpcomingTask = () => {
             minute: "2-digit",
         });
     };
+
+    // Group tasks by date
+    const groupedTasks = upcomingTask.reduce((acc, task) => {
+        const dateKey = new Date(task.date).toDateString();
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push(task);
+        return acc;
+    }, {});
 
     return (
         <div className="w-full">
@@ -96,102 +95,118 @@ const UpcomingTask = () => {
                             Add Task
                         </span>
                     </button>
-
                 </div>
-               
 
                 {/* TASK LIST SECTION */}
                 <div className="mt-4">
-                    <h3 className="text-sm font-bold border-b border-gray-200 pb-2">22 Aug 2025 • Friday</h3>
+                    {Object.keys(groupedTasks).map((dateKey) => (
+                        <div key={dateKey} className="mb-6">
+                            {/* Date Header */}
+                            <h3 className="text-sm font-bold border-b border-gray-200 pb-2">
+                                {formatDateHeader(dateKey)}
+                            </h3>
 
-                    <div className="flex flex-col w-full gap-2 p-3 border-b border-gray-200 group relative">
-                        <div className="flex items-start justify-between">
-                            {isEditing ? (
-                                <EditableTask
-                                    task={task}
-                                    setTask={setTask}
-                                    dateTime={dateTime}
-                                    setDateTime={setDateTime}
-                                    priority={priority}
-                                    setPriority={setPriority}
-                                    reminder={reminder}
-                                    setReminder={setReminder}
-                                    group={group}
-                                    setGroup={setGroup}
-                                    priorityOptions={priorityOptions}
-                                    groupOptions={groupOptions}
-                                    isEditing={isEditing}
-                                    setIsEditing={setIsEditing}
-                                />
-                            ) : (
-                                <>
-                                    {/* Left side: circle + task text */}
-                                    <div className="flex items-center gap-2 flex-1">
-                                        {/* Task complete circle */}
-                                        <button
-                                            onClick={() => setIsCompleted(!isCompleted)}
-                                            className={`
-              w-5 h-5 rounded-full border 
-              flex items-center justify-center 
-              transition-all duration-200 
-              border-[var(--icon-color)] 
-              bg-[var(--tab-active)]
-              ${isCompleted ? "scale-90" : "scale-100"}
-            `}
-                                        >
-                                            <Check
-                                                className={`
-                w-3 h-3 transition-opacity duration-200 
-                text-[var(--icon-color)]
-                ${isCompleted ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
-              `}
-                                            />
-                                        </button>
+                            {groupedTasks[dateKey].map((task) => {
+                                const isEditing = editingTaskId === task._id;
 
-                                        {/* Task text */}
-                                        <p
-                                            className={`text-sm break-words pr-6 ${isCompleted ? "line-through text-gray-400" : ""
-                                                }`}
-                                        >
-                                            {task}
-                                        </p>
+
+                                return (
+                                    <div
+                                        key={task._id}
+                                        className="flex flex-col w-full gap-2 p-3 border-b border-gray-200 group relative"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            {isEditing ? (
+                                                <EditableTask
+                                                 taskId={task._id}
+                                                    task={task.text}
+                                                    setTask={() => { }}
+                                                    dateTime={task.date}
+                                                    setDateTime={() => { }}
+                                                    priority={priorityOptions.find(p => p.value === task.priority)}
+                                                    setPriority={() => { }}
+                                                    reminder={task.reminder}
+                                                    setReminder={() => { }}
+                                                    group={{ _id: task.subGroupId, name: task.subGroupName }}
+                                                    setGroup={() => { }}
+                                                    priorityOptions={priorityOptions}
+                                                    groupOptions={groupOptions}
+                                                    isEditing={isEditing}
+                                                    setIsEditing={() => setEditingTaskId(null)}
+                                                />
+                                            ) : (
+                                                <>
+                                                    {/* Left side: circle + task text */}
+                                                    <div className="flex items-center gap-2 flex-1">
+                                                        {/* Task complete circle */}
+                                                        <button
+                                                            onClick={() => handleComplete(task)}
+                                                            className={`
+                                                                w-5 h-5 rounded-full border 
+                                                                flex items-center justify-center 
+                                                                transition-all duration-200 
+                                                                border-[var(--icon-color)] 
+                                                                bg-[var(--tab-active)]
+                                                             
+                                                            `}
+                                                        >
+                                                            <Check
+                                                                className={`
+                                                                    w-3 h-3 transition-opacity duration-200 
+                                                                    text-[var(--icon-color)]
+                                                                   
+                                                                `}
+                                                            />
+                                                        </button>
+
+                                                        {/* Task text */}
+                                                        <p
+                                                            className={`text-sm break-words pr-6 `}
+                                                        >
+                                                            {task.text}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Right side actions */}
+                                                    <TaskActions
+                                                        onEdit={() => setEditingTaskId(task._id)}
+                                                        onReminder={() => console.log("Reminder set")}
+                                                        onDelete={() => console.log("Delete task")}
+                                                    />
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* Bottom meta info (non-editing) */}
+                                        {!isEditing && (
+                                            <div className="flex flex-row justify-between items-center text-xs mt-2">
+                                                <div className="flex items-center gap-3 text-gray-600">
+                                                    {task.date && <span>📅 {formatDateTime(task.date)}</span>}
+                                                    {task.priority && (
+                                                        <span
+                                                            className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${priorityOptions.find(p => p.value === task.priority)?.color
+                                                                }`}
+                                                        >
+                                                            {task.priority}
+                                                        </span>
+                                                    )}
+                                                    {task.reminder && <span>⏰ Reminder</span>}
+                                                </div>
+
+                                                {/* Show group on right side */}
+                                                <h4>
+                                                    {task.group || ""} <span className="text-gray-500">#</span>
+                                                </h4>
+                                            </div>
+                                        )}
                                     </div>
-
-                                    {/* Right side actions */}
-                                    <TaskActions
-                                        onEdit={() => setIsEditing(true)}
-                                        onReminder={() => setReminder(true)}
-                                        onDelete={() => console.log("Delete task")}
-                                    />
-                                </>
-                            )}
+                                );
+                            })}
                         </div>
-
-                        {/* Bottom meta info (non-editing) */}
-                        {!isEditing && (
-                            <div className="flex flex-row justify-between items-center text-xs mt-2">
-                                <div className="flex items-center gap-3 text-gray-600">
-                                    {dateTime && <span>📅 {formatDateTime(dateTime)}</span>}
-                                    {priority && (
-                                        <span
-                                            className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${priority.color}`}
-                                        >
-                                            {priority.label}
-                                        </span>
-                                    )}
-                                    {reminder && <span>⏰ Reminder</span>}
-                                </div>
-
-                                {/* Show group on right side */}
-                                <h4>
-                                    {group ? group.label : "Home"} <span className="text-gray-500">#</span>
-                                </h4>
-                            </div>
-                        )}
-                    </div>
-
+                    ))}
                 </div>
             </div>
+
             {showAddModal && <AddTaskModal onClose={() => setShowAddModal(false)} />}
         </div>
     );

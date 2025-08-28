@@ -8,6 +8,7 @@ import ProjectPage from '../Components/ProjectPage';
 import RendContent from '../Components/RendContent';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTasks, selectAllTasks, selectGroups } from '../features/todoSlice';
+import Sidebar from '../Components/Sidebar';
 
 
 
@@ -25,7 +26,7 @@ const Home = () => {
 
   return (
     <div className='flex flex-row '>
-      {/* <Sidebar /> */}
+      <Sidebar />
       <div className='flex justify-between  w-full '>
         <RendContent />
       </div>

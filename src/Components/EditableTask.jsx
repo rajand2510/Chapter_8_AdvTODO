@@ -1,46 +1,75 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Calendar, Flag, Bell, X, AlarmClock, ChevronDown } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { selectAllSubGroups, addTask, updateTask } from "../features/todoSlice";
 
 const EditableTask = ({
-  task: initialTask = "",
-  setTask: _setTask,
+  task: initialTask = null,
   dateTime: initialDateTime = null,
-  setDateTime: _setDateTime,
   priority: initialPriority = null,
-  setPriority: _setPriority,
   reminder: initialReminder = false,
-  setReminder: _setReminder,
   group: initialGroup = null,
-  setGroup: _setGroup,
   priorityOptions = [],
-  groupOptions = [],
-  isEditing ,
   setIsEditing,
-  onSave, // New callback
-  className
+  className,
+  taskId,
 }) => {
-  const [task, setTask] = React.useState(initialTask);
-  const [dateTime, setDateTime] = React.useState(initialDateTime);
-  const [priority, setPriority] = React.useState(initialPriority);
-  const [reminder, setReminder] = React.useState(initialReminder);
-  const [group, setGroup] = React.useState(initialGroup);
+  const dispatch = useDispatch();
+
+  // Separate date and time states
+  const initDate = initialTask?.date
+    ? new Date(initialTask.date).toISOString().slice(0, 10)
+    : initialDateTime
+      ? new Date(initialDateTime).toISOString().slice(0, 10)
+      : "";
+
+  const initTime = initialTask?.date
+    ? new Date(initialTask.date).toISOString().slice(11, 16)
+    : initialDateTime
+      ? new Date(initialDateTime).toISOString().slice(11, 16)
+      : "";
+
+  const [task, setTask] = useState(initialTask || "");
+  const [date, setDate] = useState(initDate);
+  const [time, setTime] = useState(initTime);
+  const [priority, setPriority] = useState(initialTask?.priority || initialPriority);
+  const [reminder, setReminder] = useState(initialTask?.reminder || initialReminder);
+
+  const [group, setGroup] = useState(() => {
+    if (!taskId) {
+      // ✅ Add mode → take subgroup from prop
+      return initialGroup ? { _id: initialGroup._id, name: initialGroup.name } : null;
+    } else {
+      // ✅ Edit mode → take subgroup from existing task
+      return initialTask?.subGroupId
+        ? { _id: initialTask.subGroupId, name: initialTask.subGroupName }
+        : null;
+    }
+  });
+
+
 
   const priorityRef = useRef(null);
   const groupRef = useRef(null);
-  const [priorityOpen, setPriorityOpen] = React.useState(false);
-  const [groupOpen, setGroupOpen] = React.useState(false);
+  const [priorityOpen, setPriorityOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
+  const groupOptions = useSelector(selectAllSubGroups);
+  console.log(groupOptions);
+  // Compute combined ISO datetime
+  const dateTime = date && time ? new Date(`${date}T${time}:00.000Z`).toISOString() : null;
 
-  // Close dropdowns when clicked outside
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (priorityRef.current && !priorityRef.current.contains(e.target)) setPriorityOpen(false);
-      if (groupRef.current && !groupRef.current.contains(e.target)) setGroupOpen(false);
+      if (priorityRef.current && !priorityRef.current.contains(e.target))
+        setPriorityOpen(false);
+      if (groupRef.current && !groupRef.current.contains(e.target))
+        setGroupOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Format date/time nicely
   const formatDateTime = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -52,25 +81,55 @@ const EditableTask = ({
     });
   };
 
-  const handleSave = () => {
-    // Call callback to create a new task
-    onSave?.({
-      task,
-      dateTime,
-      priority,
+  // Save Task
+  const handleSave = async () => {
+    if (!task || !group) return alert("Please enter task and select group");
+
+    const token = localStorage.getItem("token");
+    const method = taskId ? "PUT" : "POST";
+    const url = taskId
+      ? `http://localhost:5000/api/tasks/${taskId}`
+      : "http://localhost:5000/api/tasks";
+
+    const payload = {
+      text: task,
+      priority: priority?.value || priority,
+      date: dateTime, // ✅ store in "2025-08-21T03:51:00.000Z"
       reminder,
-      group,
-    });
-    setIsEditing && setIsEditing(false);
-    _setTask && _setTask(task);
-    _setDateTime && _setDateTime(dateTime);
-    _setPriority && _setPriority(priority);
-    _setReminder && _setReminder(reminder);
-    _setGroup && _setGroup(group);
+      subGroupId: group._id || group.id,
+
+    };
+    console.log(group._id, group.id);
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        if (method === "POST") dispatch(addTask(result));
+        else dispatch(updateTask(result));
+        setIsEditing(false);
+      } else {
+        throw new Error(result.message || "Failed to save task");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
   };
 
   return (
-    <div className={`flex flex-col w-full gap-3 p-4 bg-white rounded shadow-md max-w-4xl ${className}`}>
+    <div
+      className={`flex flex-col w-full gap-3 p-4 bg-white rounded shadow-md max-w-4xl ${className}`}
+    >
+      {/* Task Title */}
       <input
         type="text"
         value={task}
@@ -79,26 +138,27 @@ const EditableTask = ({
         placeholder="Task title"
       />
 
-      {/* Selected badges */}
+      {/* Selected chips */}
       <div className="flex flex-wrap gap-2">
         {dateTime && (
-          <span
-            style={{
-              backgroundColor: "var(--sidebar-bg)",
-              color: "var(--icon-color)",
-              border: "var(--icon-color) 1px solid",
-            }}
-            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium"
-          >
+          <span className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
             <Calendar size={14} />
             {formatDateTime(dateTime)}
-            <X size={12} className="cursor-pointer ml-1" onClick={() => setDateTime(null)} />
+            <X size={12} className="cursor-pointer ml-1" onClick={() => { setDate(""); setTime(""); }} />
           </span>
         )}
         {priority && (
-          <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${priority.color}`}>
-            <Flag size={14} /> {priority.label}
+          <span
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${priority.color}`}
+          >
+            <Flag size={14} /> {priority.label || priority}
             <X size={12} className="cursor-pointer ml-1" onClick={() => setPriority(null)} />
+          </span>
+        )}
+        {group && (
+          <span className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+            # {group.name}
+            <X size={12} className="cursor-pointer ml-1" onClick={() => setGroup(null)} />
           </span>
         )}
         {reminder && (
@@ -109,24 +169,29 @@ const EditableTask = ({
         )}
       </div>
 
-      {/* Add inputs */}
+      {/* Inputs */}
       <div className="flex flex-wrap gap-2">
+        {/* Separate Date and Time */}
         <input
-          type="datetime-local"
-          value={dateTime ? dateTime.slice(0, 16) : ""}
-          onChange={(e) => setDateTime(e.target.value)}
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="text-xs border border-gray-200 text-gray-500 rounded px-2 py-1"
+        />
+        <input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
           className="text-xs border border-gray-200 text-gray-500 rounded px-2 py-1"
         />
 
-        {/* Priority dropdown */}
+        {/* Priority Dropdown */}
         <div className="relative" ref={priorityRef}>
           <button
             onClick={() => setPriorityOpen(!priorityOpen)}
-            className={`flex items-center justify-between border border-gray-200 rounded px-2 py-1 text-xs w-32 hover:bg-gray-50 ${
-              priority?.color || "text-gray-500"
-            }`}
+            className={`flex items-center justify-between border border-gray-200 rounded px-2 py-1 text-xs w-32 hover:bg-gray-50 ${priority?.color || "text-gray-500"}`}
           >
-            {priority ? priority.label : "Select Priority"}
+            {priority ? priority.label || priority : "Select Priority"}
             <ChevronDown size={12} className={`ml-1 transition-transform ${priorityOpen ? "rotate-180" : ""}`} />
           </button>
           {priorityOpen && (
@@ -147,46 +212,54 @@ const EditableTask = ({
           )}
         </div>
 
-        {/* Group dropdown */}
+        {/* Group Dropdown */}
         <div className="relative" ref={groupRef}>
           <button
             onClick={() => setGroupOpen(!groupOpen)}
-            className={`flex items-center justify-between border border-gray-200 rounded px-2 py-1 text-xs w-32 hover:bg-gray-50 ${
-              group ? "text-gray-700" : "text-gray-500"
-            }`}
+            className={`flex items-center justify-between border border-gray-200 rounded px-2 py-1 text-xs w-32 hover:bg-gray-50 ${group ? "text-gray-700" : "text-gray-500"}`}
           >
-            {group ? group.label : "Select Group"}
+            {group ? group.name : "Select Group"}
             <ChevronDown size={12} className={`ml-1 transition-transform ${groupOpen ? "rotate-180" : ""}`} />
           </button>
           {groupOpen && (
             <div className="absolute mt-1 w-full bg-white border border-gray-200 rounded shadow-lg z-50">
               {groupOptions.map((option) => (
                 <button
-                  key={option.value}
+                  key={option.id}
                   onClick={() => {
-                    setGroup(option);
+                    setGroup({ _id: option.id, name: option.name });
                     setGroupOpen(false);
+                    console.log("Selected group id:", group._id); 
                   }}
+
                   className="w-full px-2 py-1 text-left text-xs flex items-center gap-2 hover:bg-gray-50 text-gray-700"
                 >
-                  {option.label}
+                  {option.name}
                 </button>
               ))}
             </div>
           )}
         </div>
 
+        {/* Reminder (enabled only if date & time are set) */}
         <button
           onClick={() => setReminder(!reminder)}
-          className="flex items-center gap-1 text-xs px-2 py-1 text-gray-500 border-gray-200 border rounded hover:bg-gray-50"
+          disabled={!dateTime}
+          className={`flex items-center gap-1 text-xs px-2 py-1 border rounded ${dateTime
+            ? "text-gray-500 border-gray-200 hover:bg-gray-50"
+            : "text-gray-300 border-gray-100 cursor-not-allowed"
+            }`}
         >
           <AlarmClock size={14} /> {reminder ? "Remove Reminder" : "Add Reminder"}
         </button>
       </div>
 
-      {/* Save / Cancel */}
+      {/* Actions */}
       <div className="flex justify-end gap-2 text-sm">
-        <button onClick={() => setIsEditing(false)} className="px-3 py-1 rounded bg-gray-100 text-gray-600">
+        <button
+          onClick={() => setIsEditing(false)}
+          className="px-3 py-1 rounded bg-gray-100 text-gray-600"
+        >
           Cancel
         </button>
         <button

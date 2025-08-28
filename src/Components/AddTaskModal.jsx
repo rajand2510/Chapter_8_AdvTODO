@@ -9,39 +9,9 @@ const AddTaskModal = ({ onClose }) => {
     { value: "low", label: "Low", color: "bg-green-100 text-green-700" },
   ];
 
-  const groupOptions = [
-    { value: "home", label: "Home" },
-    { value: "work", label: "Work" },
-    { value: "personal", label: "Personal" },
-  ];
+ 
 
-  const [loading, setLoading] = useState(false);
-
-  const saveTaskToAPI = async (task) => {
-    setLoading(true);
-    try {
-      // Replace with your real API endpoint
-      const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(task),
-      });
-
-      if (!response.ok) throw new Error("Failed to save task");
-
-      const data = await response.json();
-      alert("Task saved successfully!");
-      onClose(); // Close modal only after success
-      return data;
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save task. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+ 
 
   // Modal content to be portaled
   const modalContent = (
@@ -57,17 +27,10 @@ const AddTaskModal = ({ onClose }) => {
 
         <EditableTask
           priorityOptions={priorityOptions}
-          groupOptions={groupOptions}
-          onSave={saveTaskToAPI}
           setIsEditing={onClose}
           className=""
         />
 
-        {loading && (
-          <div className="absolute inset-0 flex justify-center items-center bg-black/30">
-            <span className="text-white text-lg">Saving...</span>
-          </div>
-        )}
       </div>
     </div>
   );

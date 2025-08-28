@@ -12,16 +12,31 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { setActiveTab, setActiveGroup, setActiveSubGroup, fetchAllTasks } from "../features/todoSlice";
+import {
+  setActiveTab,
+  setActiveGroup,
+  setActiveSubGroup,
+} from "../features/todoSlice";
 import { AddSubGroupModal } from "./AddSubGroupModal";
 import AddTaskModal from "./AddTaskModal";
 import { useAuth } from "../Context/AuthContext";
 import ProfileModal from "./ProfileModal";
-
+ const getColorByName = (name) => {
+    switch (name.toLowerCase()) {
+      case "red":
+        return "red-600";
+      case "blue":
+        return "blue-600";
+      case "green":
+        return "green-600";
+      case "yellow":
+        return "yellow-600";
+      default:
+        return "gray-600"; // fallback color
+    }
+  };
 const Sidebar = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const groups = useSelector((state) => state.todo.groups);
@@ -30,7 +45,6 @@ const Sidebar = () => {
   const activeSubGroup = useSelector((state) => state.todo.activeSubGroup);
 
   const [isOpen, setIsOpen] = useState(true);
-  const [isGroupOpen, setIsGroupOpen] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [isAddingGroup, setIsAddingGroup] = useState(false);
@@ -38,7 +52,7 @@ const Sidebar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [fullName, setFullName] = useState("Guest");
   const [profilePicture, setProfilePicture] = useState(null);
-  const [openGroups, setOpenGroups] = useState({}); // key = group._id, value = true/false
+  const [openGroups, setOpenGroups] = useState({});
 
   const toggleGroup = (groupId) => {
     setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
@@ -51,8 +65,6 @@ const Sidebar = () => {
     }
   }, [user]);
 
-
-  
   const firstName = fullName.split(" ")[0];
   const nameParts = fullName.split(" ");
   const initials =
@@ -69,30 +81,25 @@ const Sidebar = () => {
 
   const handleToggleSidebar = () => setIsOpen(!isOpen);
 
+  // ✅ Only Redux state updates
   const handleTabClick = (tabId) => {
     dispatch(setActiveTab(tabId));
-    dispatch(setActiveGroup(null));
-    dispatch(setActiveSubGroup(null));
   };
 
   const handleGroupClick = (group) => {
     dispatch(setActiveGroup(group));
-    dispatch(setActiveSubGroup(null));
-    dispatch(setActiveTab(null));
-    navigate(`/group/${group._id}`);
   };
 
   const handleSubGroupClick = (group, subGroup) => {
+    console.log(subGroup);
+    
     dispatch(setActiveGroup(group));
     dispatch(setActiveSubGroup(subGroup));
-    dispatch(setActiveTab(null));
-    navigate(`/group/${group._id}/subgroup/${subGroup._id}`);
   };
 
   const handleAddGroup = () => {
     if (newGroupName.trim() !== "") {
-      // For now just add locally, can dispatch createGroup thunk
-      // dispatch(createGroup(newGroupName))
+      // Later: dispatch thunk to create group on backend
       setIsAddingGroup(false);
       setNewGroupName("");
     }
@@ -101,8 +108,9 @@ const Sidebar = () => {
   return (
     <div className="sticky top-0 left-0 h-screen">
       <div
-        className={`h-screen flex flex-col transition-all duration-300 ease-in-out ${isOpen ? "w-[310px] opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-full"
-          }`}
+        className={`h-screen flex flex-col transition-all duration-300 ease-in-out ${
+          isOpen ? "w-[310px] opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-full"
+        }`}
         style={{ backgroundColor: "var(--sidebar-bg)" }}
       >
         {isOpen && (
@@ -153,7 +161,7 @@ const Sidebar = () => {
                   </span>
                 </div>
 
-                {/* Tabs: Today/Upcoming/Completed */}
+                {/* Tabs */}
                 {menuItems.map((item) => (
                   <div
                     key={item.id}
@@ -176,39 +184,36 @@ const Sidebar = () => {
                   </div>
                 ))}
 
-                {/* Personal Goals / Groups */}
+                {/* Groups */}
                 <div className="mt-2">
                   {groups.map((group) => (
                     <div key={group._id} className="mb-2">
-                      {/* Group Header */}
-                      <div className="p-2 px-3 rounded-lg gap-2 flex items-center justify-between hover:bg-black/5 group">
-                        {/* Group Name click -> select group */}
-                        <span
-                          className="text-sm font-medium transition cursor-pointer"
-                          style={{ backgroundColor: activeGroup?._id === group._id ? "var(--tab-active)" : "" }}
-                          onClick={() => handleGroupClick(group)}
-                        >
+                      <div
+                        className="p-2 px-3 rounded-lg gap-2 flex items-center justify-between hover:bg-black/5 group"
+                        onClick={() => handleGroupClick(group)}
+                        style={{
+                          backgroundColor: activeGroup?._id === group._id ? "var(--tab-active)" : "",
+                        }}
+                      >
+                        <span className="text-sm font-medium transition cursor-pointer">
                           {group.name}
                         </span>
-
-                        {/* Icons */}
                         <div className="flex gap-2">
                           {/* Add Subgroup */}
                           <span
                             className="p-[2px] rounded-lg hover:bg-black/5 cursor-pointer"
                             onClick={(e) => {
-                              e.stopPropagation(); // prevent triggering group click
+                              e.stopPropagation();
                               setModalOpen(true);
                             }}
                           >
                             <Plus size={20} strokeWidth={1} />
                           </span>
-
-                          {/* Toggle Subgroup */}
+                          {/* Toggle */}
                           <span
                             className="p-[2px] rounded-lg hover:bg-black/5 cursor-pointer"
                             onClick={(e) => {
-                              e.stopPropagation(); // prevent triggering group click
+                              e.stopPropagation();
                               toggleGroup(group._id);
                             }}
                           >
@@ -224,16 +229,16 @@ const Sidebar = () => {
                             key={sub._id}
                             onClick={() => handleSubGroupClick(group, sub)}
                             className="p-2 pl-10 px-3 rounded-lg gap-2 flex items-center cursor-pointer hover:bg-black/5"
-                            style={{ backgroundColor: activeSubGroup?._id === sub._id ? "var(--tab-active)" : "" }}
+                            style={{
+                              backgroundColor: activeSubGroup?._id === sub._id ? "var(--tab-active)" : "",
+                            }}
                           >
-                            <span className="text-sm">#{sub.name}</span>
+                            <span className="text-sm"><span className={`text-${getColorByName(sub.color)}`}># </span>{sub.name}</span>
                           </div>
                         ))}
                     </div>
                   ))}
-
                 </div>
-
               </div>
 
               {/* Add new group input */}
@@ -249,10 +254,16 @@ const Sidebar = () => {
                       autoFocus
                       onKeyDown={(e) => e.key === "Enter" && handleAddGroup()}
                     />
-                    <button onClick={handleAddGroup} className="p-2 rounded-md bg-[var(--icon-color)] text-white hover:opacity-90">
+                    <button
+                      onClick={handleAddGroup}
+                      className="p-2 rounded-md bg-[var(--icon-color)] text-white hover:opacity-90"
+                    >
                       <Check size={16} />
                     </button>
-                    <button onClick={() => setIsAddingGroup(false)} className="p-2 rounded-md bg-gray-200 hover:bg-gray-300">
+                    <button
+                      onClick={() => setIsAddingGroup(false)}
+                      className="p-2 rounded-md bg-gray-200 hover:bg-gray-300"
+                    >
                       <X size={16} />
                     </button>
                   </div>
