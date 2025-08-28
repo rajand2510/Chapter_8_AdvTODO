@@ -124,7 +124,7 @@ const TodayTask = () => {
                     <div className="flex items-start justify-between">
                       {isEditing && task?._id === t._id ? (
                         <EditableTask
-                         taskId={t._id}
+                          taskId={t._id}
                           task={task.text}
                           setTask={(val) => setTask({ ...task, text: val })}
                           dateTime={dateTime}
@@ -166,13 +166,12 @@ const TodayTask = () => {
                           {t.date && <span>📅 {formatDateTime(t.date)}</span>}
                           {t.priority && (
                             <span
-                              className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
-                                t.priority === "high"
+                              className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${t.priority === "high"
                                   ? "bg-red-100 text-red-700"
                                   : t.priority === "medium"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-green-100 text-green-700"
-                              }`}
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-green-100 text-green-700"
+                                }`}
                             >
                               {t.priority}
                             </span>
@@ -187,7 +186,16 @@ const TodayTask = () => {
                   </div>
                 ))
               ) : (
-                <p className="p-3 text-gray-500">No overdue tasks ✅</p>
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 mb-4 rounded-full bg-[var(--tab-active)] flex items-center justify-center">
+                <Circle className="w-8 h-8 text-[var(--icon-color)]" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No overdue tasks</h3>
+            <p className="text-sm text-gray-500 text-center mb-6 max-w-sm">
+                Great job! You're staying on top of your tasks. Keep up the good work!
+            </p>
+           
+        </div>
               )}
             </div>
           )}
@@ -213,7 +221,7 @@ const TodayTask = () => {
                 <div className="flex items-start justify-between">
                   {isEditing && task?._id === t._id ? (
                     <EditableTask
-                    taskId={t._id}
+                      taskId={t._id}
                       task={task.text}
                       setTask={(val) => setTask({ ...task, text: val })}
                       dateTime={dateTime}
@@ -241,10 +249,17 @@ const TodayTask = () => {
                         <p className="text-sm break-words pr-6">{t.text}</p>
                       </div>
                       <TaskActions
+                        taskId={t._id}
                         onEdit={() => startEditingTask(t)}
-                        onReminder={() => console.log("Reminder", t._id)}
-                        onDelete={() => console.log("Delete", t._id)}
+                        onDelete={(id) => {
+
+                          const taskWithIds = { ...t, groupId: t.groupId, subGroupId: t.subGroupId };
+                          dispatch(removeTaskOptimistic({ taskId: id, taskData: taskWithIds }));
+
+                        }}
+
                       />
+
                     </>
                   )}
                 </div>
@@ -255,13 +270,12 @@ const TodayTask = () => {
                       {t.date && <span>📅 {formatDateTime(t.date)}</span>}
                       {t.priority && (
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
-                            t.priority === "high"
+                          className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${t.priority === "high"
                               ? "bg-red-100 text-red-700"
                               : t.priority === "medium"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-green-100 text-green-700"
-                          }`}
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
                         >
                           {t.priority}
                         </span>
@@ -276,7 +290,16 @@ const TodayTask = () => {
               </div>
             ))
           ) : (
-            <p className="p-3 text-gray-500">No tasks for today 🎉</p>
+                  <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 mb-4 rounded-full bg-[var(--tab-active)] flex items-center justify-center">
+                <Circle className="w-8 h-8 text-[var(--icon-color)]" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No tasks for today</h3>
+            <p className="text-sm text-gray-500 text-center mb-6 max-w-sm">
+                Start your day right! Add a task to make today productive.
+            </p>
+          
+        </div>
           )}
         </div>
       </div>

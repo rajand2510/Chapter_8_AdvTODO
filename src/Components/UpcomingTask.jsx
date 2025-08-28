@@ -20,12 +20,12 @@ const UpcomingTask = () => {
     const dispatch = useDispatch();
     const token = useSelector(state => state.todo.token);
 
-// In your component, when marking complete:
-const handleComplete = (task) => {
-  const taskWithIds = { ...task, groupId: task.groupId, subGroupId: task.subGroupId };
-  dispatch(removeTaskOptimistic({ taskId: task._id, taskData: taskWithIds }));
-  showUndoToast(taskWithIds, dispatch, token);
-};
+    // In your component, when marking complete:
+    const handleComplete = (task) => {
+        const taskWithIds = { ...task, groupId: task.groupId, subGroupId: task.subGroupId };
+        dispatch(removeTaskOptimistic({ taskId: task._id, taskData: taskWithIds }));
+        showUndoToast(taskWithIds, dispatch, token);
+    };
 
 
 
@@ -71,6 +71,8 @@ const handleComplete = (task) => {
         return acc;
     }, {});
 
+
+    
     return (
         <div className="w-full">
             {/* HEADER */}
@@ -97,7 +99,7 @@ const handleComplete = (task) => {
                     </button>
                 </div>
 
-                {/* TASK LIST SECTION */}
+           {upcomingTask.length > 0 ? (
                 <div className="mt-4">
                     {Object.keys(groupedTasks).map((dateKey) => (
                         <div key={dateKey} className="mb-6">
@@ -118,7 +120,7 @@ const handleComplete = (task) => {
                                         <div className="flex items-start justify-between">
                                             {isEditing ? (
                                                 <EditableTask
-                                                 taskId={task._id}
+                                                    taskId={task._id}
                                                     task={task.text}
                                                     setTask={() => { }}
                                                     dateTime={task.date}
@@ -166,18 +168,23 @@ const handleComplete = (task) => {
                                                             {task.text}
                                                         </p>
                                                     </div>
-
-                                                    {/* Right side actions */}
                                                     <TaskActions
+                                                        taskId={task._id}
                                                         onEdit={() => setEditingTaskId(task._id)}
-                                                        onReminder={() => console.log("Reminder set")}
-                                                        onDelete={() => console.log("Delete task")}
+                                                        onDelete={(id) => {
+
+                                                            const taskWithIds = { ...task, groupId: task.groupId, subGroupId: task.subGroupId };
+                                                            dispatch(removeTaskOptimistic({ taskId: id, taskData: taskWithIds }));
+
+                                                        }}
+
                                                     />
+
                                                 </>
                                             )}
                                         </div>
 
-                                        {/* Bottom meta info (non-editing) */}
+
                                         {!isEditing && (
                                             <div className="flex flex-row justify-between items-center text-xs mt-2">
                                                 <div className="flex items-center gap-3 text-gray-600">
@@ -205,6 +212,18 @@ const handleComplete = (task) => {
                         </div>
                     ))}
                 </div>
+                ) : (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 mb-4 rounded-full bg-[var(--tab-active)] flex items-center justify-center">
+                <Circle className="w-8 h-8 text-[var(--icon-color)]" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No upcoming tasks</h3>
+            <p className="text-sm text-gray-500 text-center mb-6 max-w-sm">
+                You're all caught up! Add a new task to get started with your upcoming schedule.
+            </p>
+            
+        </div>
+          )}
             </div>
 
             {showAddModal && <AddTaskModal onClose={() => setShowAddModal(false)} />}

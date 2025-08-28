@@ -42,6 +42,84 @@ export const completeTaskAPI = createAsyncThunk(
   }
 );
 
+// 🔹 Create SubGroup
+export const createSubGroup = createAsyncThunk(
+  "todo/createSubGroup",
+  async ({ name, color, groupId }, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().todo.token;
+      const response = await fetch("http://localhost:5000/api/subgroups", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, color, groupId }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return rejectWithValue(data.message || "Failed to create subGroup");
+      }
+
+      return await response.json(); // returns new subGroup
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// 🔹 Delete SubGroup
+export const deleteSubGroup = createAsyncThunk(
+  "todo/deleteSubGroup",
+  async (subGroupId, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().todo.token;
+      const response = await fetch(`http://localhost:5000/api/subgroups/${subGroupId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return rejectWithValue(data.message || "Failed to delete subGroup");
+      }
+
+      return { subGroupId };
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// 🔹 Update SubGroup
+export const updateSubGroup = createAsyncThunk(
+  "todo/updateSubGroup",
+  async ({ id, name, color, groupId }, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().todo.token;
+      const response = await fetch(`http://localhost:5000/api/subgroups/update/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, color, groupId }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return rejectWithValue(data.message || "Failed to update subGroup");
+      }
+
+      return await response.json(); // updated subGroup
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+
 const initialToken = localStorage.getItem("token");
 
 const initialState = {
@@ -196,6 +274,44 @@ const todoSlice = createSlice({
         state.status = "failed";
         state.error = action.payload ?? action.error.message;
       });
+     builder
+      // ✅ Create SubGroup
+      .addCase(createSubGroup.fulfilled, (state, action) => {
+        const newSub = action.payload;
+        const group = state.groups.find((g) => g._id === newSub.groupId);
+        if (group) {
+          group.subGroups = [...(group.subGroups || []), newSub];
+        }
+      })
+
+      // ✅ Delete SubGroup
+      .addCase(deleteSubGroup.fulfilled, (state, action) => {
+        const { subGroupId } = action.payload;
+        state.groups.forEach((g) => {
+          g.subGroups = g.subGroups?.filter((sg) => sg._id !== subGroupId);
+        });
+
+        // also clear activeSubGroup if it was deleted
+        if (state.activeSubGroup?._id === subGroupId) {
+          state.activeSubGroup = null;
+        }
+      })
+
+      // ✅ Update SubGroup
+      .addCase(updateSubGroup.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const group = state.groups.find((g) => g._id === updated.groupId);
+        if (group) {
+          group.subGroups = group.subGroups.map((sg) =>
+            sg._id === updated._id ? updated : sg
+          );
+        }
+
+        // also update activeSubGroup in real time if it’s the one edited
+        if (state.activeSubGroup?._id === updated._id) {
+          state.activeSubGroup = updated;
+        }
+      });
   },
 });
 
@@ -227,6 +343,13 @@ export const selectTodayTasks = (state) => {
     .filter((task) => task.date && isToday(task.date));
 };
 
+export const selectTasksWithDate = (state) => {
+  const pendingUndoIds = state.todo.pendingUndo.map((t) => t._id);
+  return selectAllTasks(state)
+    .filter((task) => !pendingUndoIds.includes(task._id)) // exclude pending undo
+    .filter((task) => task.date); // only tasks that have a date
+};
+
 export const selectOverdueTasks = (state) => {
   const pendingUndoIds = state.todo.pendingUndo.map((t) => t._id);
   const now = new Date();
@@ -254,6 +377,13 @@ export const selectUpcomingTasks = (state) => {
     .filter((task) => task.date && new Date(task.date) >= todayStart && !task.completed)
     .sort((a, b) => new Date(a.date) - new Date(b.date)); // SORT by date ascending
 };
+
+export const selectGroupIdsAndNames = (state) =>
+  (state.todo.groups || []).map(group => ({
+    id: group._id,    // or just _id: group._id if you prefer
+    name: group.name
+  }));
+
 
 export const selectGroupsSummary = (state) =>
   state.todo.groups.map((group) => ({

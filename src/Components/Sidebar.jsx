@@ -45,7 +45,7 @@ const Sidebar = () => {
   const activeSubGroup = useSelector((state) => state.todo.activeSubGroup);
 
   const [isOpen, setIsOpen] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
+
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [isAddingGroup, setIsAddingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
@@ -200,15 +200,7 @@ const Sidebar = () => {
                         </span>
                         <div className="flex gap-2">
                           {/* Add Subgroup */}
-                          <span
-                            className="p-[2px] rounded-lg hover:bg-black/5 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setModalOpen(true);
-                            }}
-                          >
-                            <Plus size={20} strokeWidth={1} />
-                          </span>
+                      
                           {/* Toggle */}
                           <span
                             className="p-[2px] rounded-lg hover:bg-black/5 cursor-pointer"
@@ -242,41 +234,7 @@ const Sidebar = () => {
               </div>
 
               {/* Add new group input */}
-              <div className="p-3 border-t border-gray-200">
-                {isAddingGroup ? (
-                  <div className="flex items-center gap-2 p-2 rounded-lg">
-                    <input
-                      type="text"
-                      value={newGroupName}
-                      onChange={(e) => setNewGroupName(e.target.value)}
-                      className="flex-1 px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--icon-color)]"
-                      placeholder="Enter group name"
-                      autoFocus
-                      onKeyDown={(e) => e.key === "Enter" && handleAddGroup()}
-                    />
-                    <button
-                      onClick={handleAddGroup}
-                      className="p-2 rounded-md bg-[var(--icon-color)] text-white hover:opacity-90"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <button
-                      onClick={() => setIsAddingGroup(false)}
-                      className="p-2 rounded-md bg-gray-200 hover:bg-gray-300"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsAddingGroup(true)}
-                    className="w-full flex items-center gap-2 p-2 rounded-lg bg-[var(--icon-color)] text-white hover:opacity-90 transition"
-                  >
-                    <Plus size={18} />
-                    <span className="text-sm font-medium">Add a Group</span>
-                  </button>
-                )}
-              </div>
+              
             </div>
           </>
         )}
@@ -291,7 +249,7 @@ const Sidebar = () => {
         </span>
       )}
 
-      <AddSubGroupModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+
       {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}
       {showAddTaskModal && <AddTaskModal onClose={() => setShowAddTaskModal(false)} />}
     </div>

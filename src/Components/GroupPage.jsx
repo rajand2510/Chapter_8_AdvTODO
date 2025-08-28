@@ -3,8 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { ProjectTaskAction } from "./ProjectTaskAction";
 import { AddSubGroupModal } from "./AddSubGroupModal";
 import { useDispatch, useSelector } from "react-redux";
-import { selectActiveGroupWithSubGroups, setActiveGroup, setActiveSubGroup } from "../features/todoSlice";
-
+import {
+    selectActiveGroupWithSubGroups,
+    deleteSubGroup,
+} from "../features/todoSlice";
 const getColorByName = (name) => {
     switch (name?.toLowerCase()) {
         case "red":
@@ -23,6 +25,7 @@ const getColorByName = (name) => {
 const GroupPage = () => {
     const dispatch = useDispatch();
     const [modalOpen, setModalOpen] = useState(false);
+    const [editingSub, setEditingSub] = useState(null); // track edit vs add
     const priorityRef = useRef(null);
     const groupRef = useRef(null);
 
@@ -44,10 +47,7 @@ const GroupPage = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSubGroupClick = (group, subGroup) => {
-        dispatch(setActiveGroup(group));
-        dispatch(setActiveSubGroup(subGroup));
-    };
+
 
     return (
         <div className="w-full">
@@ -63,7 +63,10 @@ const GroupPage = () => {
                 <div className="flex justify-between items-center">
                     <h3 className="text-3xl font-bold">{groupData?.name || "No Group Selected"}</h3>
                     <button
-                        onClick={() => setModalOpen(true)}
+                        onClick={() => {
+                            setEditingSub(null); // reset
+                            setModalOpen(true);
+                        }}
                         className="p-2 px-3 rounded-lg gap-2 flex hover:bg-black/5 items-center cursor-pointer"
                     >
                         <span className="w-6 h-6 flex items-center justify-center rounded-full transition">
@@ -85,7 +88,7 @@ const GroupPage = () => {
                         <div
                             key={sub._id}  // ✅ you have a key
                             className="flex flex-col w-full gap-2 p-3 py-6 group relative hover:bg-gray-50 rounded-lg"
-                            onClick={() => handleSubGroupClick(activeGroup, sub)}
+
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-2 flex-1">
@@ -95,8 +98,14 @@ const GroupPage = () => {
                                 </div>
 
                                 <ProjectTaskAction
-                                    onEdit={() => setModalOpen(true)}
-                                    onDelete={() => console.log("Delete project", sub.name)}
+                                    onEdit={() => {
+                                        setEditingSub(sub);
+                                        setModalOpen(true);
+                                    }}
+                                    onDelete={() => {
+                                        console.log(sub.id, sub.name, groupData.id);
+                                        dispatch(deleteSubGroup(sub.id));
+                                    }}
                                 />
                             </div>
                         </div>
@@ -108,9 +117,10 @@ const GroupPage = () => {
             <AddSubGroupModal
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
-                onSave={(data) => console.log("Saved Project:", data)}
-                project={{ name: groupData?.name || "", color: "#4A5FC1", parent: null }}
+                project={editingSub}
+                groupId={groupData.id}
             />
+
         </div>
     );
 };
