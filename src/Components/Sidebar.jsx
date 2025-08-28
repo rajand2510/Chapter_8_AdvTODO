@@ -58,6 +58,17 @@ const Sidebar = () => {
     setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
+
+  useEffect(() => {
+  if (groups.length > 0) {
+    const expanded = {};
+    groups.forEach((g) => {
+      expanded[g._id] = true; // true = opened
+    });
+    setOpenGroups(expanded);
+  }
+}, [groups]);
+
   useEffect(() => {
     if (user) {
       setFullName(user.name || "Guest");
@@ -97,13 +108,7 @@ const Sidebar = () => {
     dispatch(setActiveSubGroup(subGroup));
   };
 
-  const handleAddGroup = () => {
-    if (newGroupName.trim() !== "") {
-      // Later: dispatch thunk to create group on backend
-      setIsAddingGroup(false);
-      setNewGroupName("");
-    }
-  };
+
 
   return (
     <div className="sticky top-0 left-0 h-screen">

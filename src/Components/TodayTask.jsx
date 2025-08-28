@@ -65,17 +65,12 @@ const TodayTask = () => {
     setIsEditing(true);
   };
 
-  // Format date nicely
-  const formatDateTime = (iso) => {
+ const formatDateTime = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+    return `${("0" + d.getUTCDate()).slice(-2)} ${d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" })} ${d.getUTCFullYear()}, ${("0" + d.getUTCHours()).slice(-2)}:${("0" + d.getUTCMinutes()).slice(-2)}`;
+};
+
 
   return (
     <div className="w-full">

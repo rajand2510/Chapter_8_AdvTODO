@@ -58,16 +58,12 @@
       ...noDateTasks,
     ]);
 
-    const formatDateTime = (iso) => {
-      if (!iso) return "";
-      const d = new Date(iso);
-      return d.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    };
+const formatDateTime = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return `${("0" + d.getUTCDate()).slice(-2)} ${d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" })} ${d.getUTCFullYear()}, ${("0" + d.getUTCHours()).slice(-2)}:${("0" + d.getUTCMinutes()).slice(-2)}`;
+};
+
 
     const renderTask = (task) => {
       const isEditing = editingTaskId === task._id;

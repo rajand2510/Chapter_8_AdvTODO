@@ -51,17 +51,11 @@ const UpcomingTask = () => {
             weekday: "long",
         });
     };
-
-    const formatDateTime = (iso) => {
-        if (!iso) return "";
-        const d = new Date(iso);
-        return d.toLocaleString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    };
+const formatDateTime = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return `${("0" + d.getUTCDate()).slice(-2)} ${d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" })} ${d.getUTCFullYear()}, ${("0" + d.getUTCHours()).slice(-2)}:${("0" + d.getUTCMinutes()).slice(-2)}`;
+};
 
     // Group tasks by date
     const groupedTasks = upcomingTask.reduce((acc, task) => {
@@ -188,7 +182,7 @@ const UpcomingTask = () => {
                                         {!isEditing && (
                                             <div className="flex flex-row justify-between items-center text-xs mt-2">
                                                 <div className="flex items-center gap-3 text-gray-600">
-                                                    {task.date && <span>📅 {formatDateTime(task.date)}</span>}
+                                                    {task.date && <span>📅 {formatDateTime(task.date)} </span>}
                                                     {task.priority && (
                                                         <span
                                                             className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${priorityOptions.find(p => p.value === task.priority)?.color

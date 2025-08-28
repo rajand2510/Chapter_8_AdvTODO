@@ -56,7 +56,8 @@ const EditableTask = ({
   const groupOptions = useSelector(selectAllSubGroups);
   console.log(groupOptions);
   // Compute combined ISO datetime
-  const dateTime = date && time ? new Date(`${date}T${time}:00.000Z`).toISOString() : null;
+ const dateTime = date ? new Date(`${date}T${time || "00:00"}:00.000Z`).toISOString() : null;
+
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -70,16 +71,11 @@ const EditableTask = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const formatDateTime = (iso) => {
+ const formatDateTime = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+    return `${("0" + d.getUTCDate()).slice(-2)} ${d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" })}, ${("0" + d.getUTCHours()).slice(-2)}:${("0" + d.getUTCMinutes()).slice(-2)}`;
+};
 
   // Save Task
   const handleSave = async () => {
@@ -180,7 +176,8 @@ const EditableTask = ({
         />
         <input
           type="time"
-          value={time}
+         value={time || "00:00"}  // show 00:00 if time is empty
+
           onChange={(e) => setTime(e.target.value)}
           className="text-xs border border-gray-200 text-gray-500 rounded px-2 py-1"
         />
@@ -244,7 +241,8 @@ const EditableTask = ({
         {/* Reminder (enabled only if date & time are set) */}
         <button
           onClick={() => setReminder(!reminder)}
-          disabled={!dateTime}
+        disabled={!date || !time}  // reminder allowed only if both date and time are set
+
           className={`flex items-center gap-1 text-xs px-2 py-1 border rounded ${dateTime
             ? "text-gray-500 border-gray-200 hover:bg-gray-50"
             : "text-gray-300 border-gray-100 cursor-not-allowed"
